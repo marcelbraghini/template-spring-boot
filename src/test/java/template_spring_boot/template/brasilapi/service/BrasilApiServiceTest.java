@@ -3,6 +3,7 @@ package template_spring_boot.template.brasilapi.service;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+import template_spring_boot.template.brasilapi.cache.BrasilApiCache;
 import template_spring_boot.template.brasilapi.dto.ExternalBrasilApiDTO;
 import template_spring_boot.template.brasilapi.external.BrasilApiClient;
 import template_spring_boot.template.brasilapi.entity.BrasilApiAddress;
@@ -10,18 +11,25 @@ import template_spring_boot.template.brasilapi.exceptions.ExternalServiceExcepti
 import template_spring_boot.template.brasilapi.exceptions.InvalidCepException;
 import template_spring_boot.template.brasilapi.exceptions.NotFoundCepException;
 
+import java.util.Optional;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.anyString;
 
 public class BrasilApiServiceTest {
 
     private BrasilApiClient client;
+    private BrasilApiCache cache;
     private BrasilApiService service;
 
     @BeforeEach
     public void setUp() {
         client = Mockito.mock(BrasilApiClient.class);
-        service = new BrasilApiService(client);
+        cache = Mockito.mock(BrasilApiCache.class);
+        // default cache behavior: miss
+        when(cache.get(anyString())).thenReturn(Optional.empty());
+        service = new BrasilApiService(client, cache);
     }
 
     @Test
@@ -64,4 +72,3 @@ public class BrasilApiServiceTest {
         assertThrows(ExternalServiceException.class, () -> service.findByCep("11111111"));
     }
 }
-
