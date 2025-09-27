@@ -6,46 +6,31 @@ import org.springframework.stereotype.Service;
 import template_spring_boot.template.brasilapi.dto.ExternalBrasilApiDTO;
 import template_spring_boot.template.brasilapi.entity.BrasilApiAddress;
 import template_spring_boot.template.brasilapi.external.BrasilApiClient;
-import template_spring_boot.template.brasilapi.exceptions.InvalidCepException;
-
-import java.util.regex.Pattern;
+import template_spring_boot.template.brasilapi.validation.CepValidator;
 
 @Service
 public class BrasilApiService {
     private static final Logger logger = LoggerFactory.getLogger(BrasilApiService.class);
-    private static final Pattern CEP_PATTERN = Pattern.compile("^(?:[0-9]{8}|[0-9]{5}-[0-9]{3})$");
 
     private final BrasilApiClient brasilApiClient;
 
-    public BrasilApiService(BrasilApiClient brasilApiClient) {
+    public BrasilApiService(final BrasilApiClient brasilApiClient) {
         this.brasilApiClient = brasilApiClient;
     }
 
     public BrasilApiAddress findByCep(final String cep) {
-        if (cep == null) {
-            logger.warn("CEP is null");
-            throw new InvalidCepException("CEP inválido ou mal formatado");
-        }
+        final String normalized = CepValidator.normalize(cep);
+        CepValidator.validate(cep, normalized);
 
-        String normalized = cep.replaceAll("[^0-9]", "");
+        final ExternalBrasilApiDTO externalBrasilApiDTO = brasilApiClient.fetchByCep(normalized);
 
-        if (!CEP_PATTERN.matcher(cep).matches() && !CEP_PATTERN.matcher(normalized).matches()) {
-            logger.warn("CEP {} is invalid", cep);
-            throw new InvalidCepException("CEP inválido ou mal formatado");
-        }
-
-        String toQuery = normalized;
-        logger.info("Searching for cep {} (normalized {})", cep, toQuery);
-        ExternalBrasilApiDTO dto = brasilApiClient.fetchByCep(toQuery);
-        BrasilApiAddress addr = new BrasilApiAddress(
-                dto.getCep(),
-                dto.getState(),
-                dto.getCity(),
-                dto.getNeighborhood(),
-                dto.getStreet(),
-                dto.getService()
+        return new BrasilApiAddress(
+                externalBrasilApiDTO.getCep(),
+                externalBrasilApiDTO.getState(),
+                externalBrasilApiDTO.getCity(),
+                externalBrasilApiDTO.getNeighborhood(),
+                externalBrasilApiDTO.getStreet(),
+                externalBrasilApiDTO.getService()
         );
-        return addr;
     }
 }
-

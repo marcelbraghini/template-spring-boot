@@ -13,54 +13,41 @@ import template_spring_boot.template.brasilapi.dto.ExternalBrasilApiDTO;
 import template_spring_boot.template.brasilapi.exceptions.ExternalServiceException;
 import template_spring_boot.template.brasilapi.exceptions.NotFoundCepException;
 
-import java.util.Arrays;
-import java.util.List;
-
 @Component
 public class BrasilApiClient {
     private static final Logger logger = LoggerFactory.getLogger(BrasilApiClient.class);
+    private static final String API_CEP_V_2 = "api/cep/v2/";
 
     private final RestTemplate restTemplate;
-    private final List<String> providers;
+    private final String url;
 
-    public BrasilApiClient(RestTemplate restTemplate,
-                           @Value("${brasilapi.providers:https://brasilapi.com.br/api/cep/v2}") String providersCsv) {
+    public BrasilApiClient(final RestTemplate restTemplate,
+                           final @Value("${brasilapi.url:https://brasilapi.com.br/}") String url) {
         this.restTemplate = restTemplate;
-        this.providers = Arrays.stream(providersCsv.split(","))
-                .map(String::trim)
-                .filter(s -> !s.isEmpty())
-                .toList();
+        this.url = url;
     }
 
     public ExternalBrasilApiDTO fetchByCep(String cep) {
-        boolean hadProviderError = false;
-        for (String base : providers) {
-            String url = base;
-            if (!base.endsWith("/")) {
-                url = base + "/";
+        final String base = this.url == null ? "" : this.url.trim();
+        final String requestUrl = base + API_CEP_V_2 + cep;
+
+        logger.info("Querying provider {} for cep {}", requestUrl, cep);
+
+        try {
+            final ResponseEntity<ExternalBrasilApiDTO> externalBrasilApiDTOResponseEntity
+                    = restTemplate.getForEntity(requestUrl, ExternalBrasilApiDTO.class);
+
+            if (externalBrasilApiDTOResponseEntity.getStatusCode()
+                    == HttpStatus.OK && externalBrasilApiDTOResponseEntity.getBody() != null) {
+                return externalBrasilApiDTOResponseEntity.getBody();
             }
-            url = url + cep;
-            logger.info("Trying provider {} for cep {}", base, cep);
-            try {
-                ResponseEntity<ExternalBrasilApiDTO> resp = restTemplate.getForEntity(url, ExternalBrasilApiDTO.class);
-                if (resp.getStatusCode() == HttpStatus.OK && resp.getBody() != null) {
-                    logger.info("Provider {} returned result for cep {}", base, cep);
-                    return resp.getBody();
-                }
-            } catch (HttpClientErrorException.NotFound nf) {
-                logger.warn("Provider {} returned 404 for cep {}", base, cep);
-                // try next provider
-            } catch (RestClientException ex) {
-                hadProviderError = true;
-                logger.error("Provider {} failed for cep {}: {}", base, cep, ex.getMessage());
-                // continue to next provider
-            }
-        }
-        if (hadProviderError) {
-            logger.warn("Providers had errors while trying to fetch cep {}", cep);
-            throw new ExternalServiceException("Error while calling external providers");
-        }
-        logger.warn("CEP {} not found in any provider", cep);
-        throw new NotFoundCepException("CEP not found in any provider");
+
+        } catch (final HttpClientErrorException.NotFound nf) {
+            throw new ExternalServiceException("Provider returned 404 for cep: " + cep+ "url=" + requestUrl);
+        } catch (final RestClientException ex) {
+            throw new ExternalServiceException("Provider had errors while trying to fetch cep: " + cep);        }
+
+        logger.error("CEP {} not found in provider {}", cep, requestUrl);
+        throw new NotFoundCepException("CEP " + cep + " not found in provider " + requestUrl);
     }
 }

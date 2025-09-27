@@ -18,16 +18,16 @@ public class BrasilApiController {
 
     private final BrasilApiService brasilApiService;
 
-    public BrasilApiController(BrasilApiService brasilApiService) {
+    public BrasilApiController(final BrasilApiService brasilApiService) {
         this.brasilApiService = brasilApiService;
     }
 
     @GetMapping("/cep/{cep}")
     public ResponseEntity<BrasilApiAddressResponse> getByCep(@PathVariable("cep") final String cep) {
+        final BrasilApiAddress brasilApiAddress = brasilApiService.findByCep(cep);
+        final BrasilApiAddressResponse brasilApiAddressResponse = BrasilApiAddressResponse.fromEntity(brasilApiAddress);
         logger.info("Received request for CEP {}", cep);
-        BrasilApiAddress addr = brasilApiService.findByCep(cep);
-        BrasilApiAddressResponse resp = BrasilApiAddressResponse.fromEntity(addr);
-        return ResponseEntity.ok(resp);
+        return ResponseEntity.ok(brasilApiAddressResponse);
     }
 }
 
