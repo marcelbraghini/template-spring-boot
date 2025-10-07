@@ -2,8 +2,9 @@ package template_spring_boot.template.brasilapi.external;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.HttpClientErrorException;
@@ -11,10 +12,12 @@ import org.springframework.web.client.RestTemplate;
 import template_spring_boot.template.brasilapi.dto.ExternalBrasilApiDTO;
 import template_spring_boot.template.brasilapi.exceptions.ExternalServiceException;
 import template_spring_boot.template.brasilapi.exceptions.NotFoundCepException;
+import template_spring_boot.template.testutil.TestFixtures;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+@ExtendWith(MockitoExtension.class)
 class BrasilApiClientTest {
     @Mock
     private RestTemplate restTemplate;
@@ -23,15 +26,13 @@ class BrasilApiClientTest {
 
     @BeforeEach
     void setUp() {
-        MockitoAnnotations.openMocks(this);
         client = new BrasilApiClient(restTemplate, "https://brasilapi.com.br/");
     }
 
     @Test
     void fetchByCep_success_returnsDto() {
-        final String cep = "89883000";
-        final ExternalBrasilApiDTO dto = new ExternalBrasilApiDTO();
-        dto.setCep(cep);
+        final String cep = TestFixtures.SAMPLE_CEP;
+        final ExternalBrasilApiDTO dto = TestFixtures.sampleExternalDto();
 
         final String expectedUrl = "https://brasilapi.com.br/api/cep/v2/" + cep;
         when(restTemplate.getForEntity(expectedUrl, ExternalBrasilApiDTO.class))
@@ -46,7 +47,7 @@ class BrasilApiClientTest {
 
     @Test
     void fetchByCep_404_throwsExternalServiceException() {
-        final String cep = "89883000";
+        final String cep = TestFixtures.SAMPLE_CEP;
         final String expectedUrl = "https://brasilapi.com.br/api/cep/v2/" + cep;
 
         when(restTemplate.getForEntity(expectedUrl, ExternalBrasilApiDTO.class))
@@ -58,7 +59,7 @@ class BrasilApiClientTest {
 
     @Test
     void fetchByCep_okButNoBody_throwsNotFoundCepException() {
-        final String cep = "89883000";
+        final String cep = TestFixtures.SAMPLE_CEP;
         final String expectedUrl = "https://brasilapi.com.br/api/cep/v2/" + cep;
 
         when(restTemplate.getForEntity(expectedUrl, ExternalBrasilApiDTO.class))
@@ -68,4 +69,3 @@ class BrasilApiClientTest {
         verify(restTemplate).getForEntity(expectedUrl, ExternalBrasilApiDTO.class);
     }
 }
-

@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import template_spring_boot.template.brasilapi.dto.BrasilApiAddressResponse;
 import template_spring_boot.template.brasilapi.entity.BrasilApiAddress;
 import template_spring_boot.template.brasilapi.service.BrasilApiService;
+import template_spring_boot.template.testutil.TestFixtures;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -25,8 +26,8 @@ class BrasilApiControllerTest {
 
     @Test
     void testGetByCep_ReturnsAddressResponse() {
-        final String cep = "89883000";
-        final BrasilApiAddress mockAddress = new BrasilApiAddress();
+        final String cep = TestFixtures.SAMPLE_CEP;
+        final BrasilApiAddress mockAddress = TestFixtures.sampleAddress();
         when(brasilApiService.findByCep(cep)).thenReturn(mockAddress);
 
         BrasilApiAddressResponse expectedResponse = BrasilApiAddressResponse.fromEntity(mockAddress);

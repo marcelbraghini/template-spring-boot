@@ -9,8 +9,7 @@ import template_spring_boot.template.brasilapi.cache.BrasilApiCache;
 import template_spring_boot.template.brasilapi.dto.ExternalBrasilApiDTO;
 import template_spring_boot.template.brasilapi.entity.BrasilApiAddress;
 import template_spring_boot.template.brasilapi.external.BrasilApiClient;
-
-import java.time.Duration;
+import template_spring_boot.template.testutil.TestFixtures;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -33,41 +32,34 @@ class BrasilApiServiceTest {
 
     @Test
     void findByCep_returnsFromCache_whenPresent() {
-        final BrasilApiAddress cached = new BrasilApiAddress("89883000", "SC", "City", "Neighborhood", "Street", "svc");
-        when(cache.get("89883000")).thenReturn(Optional.of(cached));
+        final BrasilApiAddress cached = TestFixtures.sampleAddress();
+        when(cache.get(TestFixtures.SAMPLE_CEP)).thenReturn(Optional.of(cached));
 
-        final BrasilApiAddress result = service.findByCep("89883000");
+        final BrasilApiAddress result = service.findByCep(TestFixtures.SAMPLE_CEP);
 
         assertNotNull(result);
-        assertEquals("89883000", result.getCep());
-        verify(cache, times(1)).get("89883000");
+        assertEquals(TestFixtures.SAMPLE_CEP, result.getCep());
+        verify(cache, times(1)).get(TestFixtures.SAMPLE_CEP);
         verifyNoInteractions(client);
     }
 
     @Test
     void findByCep_callsExternalAndUpdatesCache_whenNotInCache() {
-        when(cache.get("89883000")).thenReturn(Optional.empty());
+        when(cache.get(TestFixtures.SAMPLE_CEP)).thenReturn(Optional.empty());
 
-        ExternalBrasilApiDTO dto = new ExternalBrasilApiDTO();
-        dto.setCep("89883000");
-        dto.setState("SC");
-        dto.setCity("City");
-        dto.setNeighborhood("Neighborhood");
-        dto.setStreet("Street");
-        dto.setService("svc");
+        ExternalBrasilApiDTO dto = TestFixtures.sampleExternalDto();
 
-        when(client.fetchByCep("89883000")).thenReturn(dto);
+        when(client.fetchByCep(TestFixtures.SAMPLE_CEP)).thenReturn(dto);
 
-        final BrasilApiAddress result = service.findByCep("89883000");
+        final BrasilApiAddress result = service.findByCep(TestFixtures.SAMPLE_CEP);
 
         assertNotNull(result);
-        assertEquals("89883000", result.getCep());
+        assertEquals(TestFixtures.SAMPLE_CEP, result.getCep());
 
         ArgumentCaptor<BrasilApiAddress> captor = ArgumentCaptor.forClass(BrasilApiAddress.class);
-        verify(cache).put(eq("89883000"), captor.capture(), eq(Duration.ofSeconds(60)));
+        verify(cache).put(eq(TestFixtures.SAMPLE_CEP), captor.capture(), eq(TestFixtures.DEFAULT_TTL));
 
         BrasilApiAddress cached = captor.getValue();
-        assertEquals("89883000", cached.getCep());
+        assertEquals(TestFixtures.SAMPLE_CEP, cached.getCep());
     }
 }
-
