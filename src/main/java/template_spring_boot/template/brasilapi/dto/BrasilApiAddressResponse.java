@@ -49,5 +49,22 @@ public class BrasilApiAddressResponse {
     public String getService() {
         return service;
     }
-}
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        BrasilApiAddressResponse that = (BrasilApiAddressResponse) o;
+        return java.util.Objects.equals(cep, that.cep) &&
+                java.util.Objects.equals(state, that.state) &&
+                java.util.Objects.equals(city, that.city) &&
+                java.util.Objects.equals(neighborhood, that.neighborhood) &&
+                java.util.Objects.equals(street, that.street) &&
+                java.util.Objects.equals(service, that.service);
+    }
+
+    @Override
+    public int hashCode() {
+        return java.util.Objects.hash(cep, state, city, neighborhood, street, service);
+    }
+}

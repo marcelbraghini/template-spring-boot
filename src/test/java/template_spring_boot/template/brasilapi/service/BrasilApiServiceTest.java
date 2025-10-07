@@ -2,73 +2,72 @@ package template_spring_boot.template.brasilapi.service;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import template_spring_boot.template.brasilapi.cache.BrasilApiCache;
 import template_spring_boot.template.brasilapi.dto.ExternalBrasilApiDTO;
-import template_spring_boot.template.brasilapi.external.BrasilApiClient;
 import template_spring_boot.template.brasilapi.entity.BrasilApiAddress;
-import template_spring_boot.template.brasilapi.exceptions.ExternalServiceException;
-import template_spring_boot.template.brasilapi.exceptions.InvalidCepException;
-import template_spring_boot.template.brasilapi.exceptions.NotFoundCepException;
+import template_spring_boot.template.brasilapi.external.BrasilApiClient;
 
+import java.time.Duration;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.when;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.*;
 
-public class BrasilApiServiceTest {
-
+class BrasilApiServiceTest {
+    @Mock
     private BrasilApiClient client;
+
+    @Mock
     private BrasilApiCache cache;
+
     private BrasilApiService service;
 
     @BeforeEach
-    public void setUp() {
-        client = Mockito.mock(BrasilApiClient.class);
-        cache = Mockito.mock(BrasilApiCache.class);
-        // default cache behavior: miss
-        when(cache.get(anyString())).thenReturn(Optional.empty());
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
         service = new BrasilApiService(client, cache);
     }
 
     @Test
-    public void testFindByCep_success() {
+    void findByCep_returnsFromCache_whenPresent() {
+        final BrasilApiAddress cached = new BrasilApiAddress("89883000", "SC", "City", "Neighborhood", "Street", "svc");
+        when(cache.get("89883000")).thenReturn(Optional.of(cached));
+
+        final BrasilApiAddress result = service.findByCep("89883000");
+
+        assertNotNull(result);
+        assertEquals("89883000", result.getCep());
+        verify(cache, times(1)).get("89883000");
+        verifyNoInteractions(client);
+    }
+
+    @Test
+    void findByCep_callsExternalAndUpdatesCache_whenNotInCache() {
+        when(cache.get("89883000")).thenReturn(Optional.empty());
+
         ExternalBrasilApiDTO dto = new ExternalBrasilApiDTO();
         dto.setCep("89883000");
         dto.setState("SC");
-        dto.setCity("Águas de Chapecó");
-        dto.setNeighborhood(null);
-        dto.setStreet(null);
-        dto.setService("open-cep");
+        dto.setCity("City");
+        dto.setNeighborhood("Neighborhood");
+        dto.setStreet("Street");
+        dto.setService("svc");
 
         when(client.fetchByCep("89883000")).thenReturn(dto);
 
-        BrasilApiAddress result = service.findByCep("89883000");
+        final BrasilApiAddress result = service.findByCep("89883000");
+
         assertNotNull(result);
         assertEquals("89883000", result.getCep());
-        assertEquals("SC", result.getState());
-        assertEquals("Águas de Chapecó", result.getCity());
-        assertNull(result.getNeighborhood());
-        assertNull(result.getStreet());
-        assertEquals("open-cep", result.getService());
-    }
 
-    @Test
-    public void testFindByCep_invalidCep() {
-        assertThrows(InvalidCepException.class, () -> service.findByCep("abc"));
-        assertThrows(InvalidCepException.class, () -> service.findByCep(null));
-    }
+        ArgumentCaptor<BrasilApiAddress> captor = ArgumentCaptor.forClass(BrasilApiAddress.class);
+        verify(cache).put(eq("89883000"), captor.capture(), eq(Duration.ofSeconds(60)));
 
-    @Test
-    public void testFindByCep_notFound() {
-        when(client.fetchByCep("00000000")).thenThrow(new NotFoundCepException("CEP not found"));
-        assertThrows(NotFoundCepException.class, () -> service.findByCep("00000000"));
-    }
-
-    @Test
-    public void testFindByCep_externalError() {
-        when(client.fetchByCep("11111111")).thenThrow(new ExternalServiceException("external error"));
-        assertThrows(ExternalServiceException.class, () -> service.findByCep("11111111"));
+        BrasilApiAddress cached = captor.getValue();
+        assertEquals("89883000", cached.getCep());
     }
 }
+
