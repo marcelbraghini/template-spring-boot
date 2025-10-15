@@ -16,7 +16,7 @@ This is a template project for Spring Boot applications using Maven.
 ### Testing API with CURL
 ```bash
 curl -i -H "Accept: application/json" http://localhost:8080/health
-curl -i -H "Accept: application/json" http://localhost:8080/brasilapi/cep/89883000 
+curl -i -H "Accept: application/json" http://localhost:8080/v1/cep/89883000 
 ```
 
 by: https://start.spring.io/
