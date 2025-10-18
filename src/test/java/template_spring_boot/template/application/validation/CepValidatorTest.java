@@ -1,11 +1,15 @@
 package template_spring_boot.template.application.validation;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
 import template_spring_boot.template.application.exceptions.InvalidCepException;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@ExtendWith(MockitoExtension.class)
 class CepValidatorTest {
+
     @Test
     void normalize_removesNonDigits() {
         final String normalized = CepValidator.normalize("12345-678");

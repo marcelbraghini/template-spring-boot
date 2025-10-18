@@ -1,0 +1,14 @@
+databaseChangeLog:
+  - changeSet:
+      id: V1-create-cep-audit-table
+      author: template
+      labels: cep-audit
+      logicalFilePath: db/changelog/db.changelog-master.yaml
+      changes:
+        - sqlFile:
+            path: classpath:db/migration/V1__create_cep_audit_table.sql
+            encoding: utf8
+            relativeToChangelogFile: false
+            endDelimiter: ;
+            stripComments: false
+            splitStatements: true

@@ -1,6 +1,8 @@
 package template_spring_boot.template.application.handler;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import template_spring_boot.template.application.exceptions.dto.ErrorResponse;
@@ -10,6 +12,7 @@ import template_spring_boot.template.application.exceptions.NotFoundCepException
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@ExtendWith(MockitoExtension.class)
 class GlobalExceptionHandlerTest {
     private final GlobalExceptionHandler handler = new GlobalExceptionHandler();
 

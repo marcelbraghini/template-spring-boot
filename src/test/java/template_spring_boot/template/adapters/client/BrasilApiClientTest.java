@@ -3,6 +3,7 @@ package template_spring_boot.template.adapters.client;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
@@ -12,6 +13,7 @@ import org.springframework.web.client.RestTemplate;
 import template_spring_boot.template.adapters.client.dto.AddressResponse;
 import template_spring_boot.template.application.exceptions.ExternalServiceException;
 import template_spring_boot.template.application.exceptions.NotFoundCepException;
+import template_spring_boot.template.application.service.gateway.AuditService;
 import template_spring_boot.template.fixture.TestFixtures;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -20,14 +22,19 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class BrasilApiClientTest {
+
     @Mock
     private RestTemplate restTemplate;
 
+    @Mock
+    private AuditService auditService;
+
+    @InjectMocks
     private BrasilApiClient client;
 
     @BeforeEach
     void setUp() {
-        client = new BrasilApiClient(restTemplate, "https://brasilapi.com.br/");
+        org.springframework.test.util.ReflectionTestUtils.setField(client, "url", "https://brasilapi.com.br/");
     }
 
     @Test
@@ -43,6 +50,7 @@ class BrasilApiClientTest {
 
         assertNotNull(result);
         assertEquals(cep, result.getCep());
+
         verify(restTemplate).getForEntity(expectedUrl, AddressResponse.class);
     }
 

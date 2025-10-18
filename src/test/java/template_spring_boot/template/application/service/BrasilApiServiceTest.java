@@ -2,11 +2,15 @@ package template_spring_boot.template.application.service;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 import template_spring_boot.template.adapters.client.RedisClient;
 import template_spring_boot.template.adapters.client.dto.AddressResponse;
+import template_spring_boot.template.application.service.gateway.AuditService;
 import template_spring_boot.template.domain.Address;
 import template_spring_boot.template.adapters.client.BrasilApiClient;
 import template_spring_boot.template.fixture.TestFixtures;
@@ -15,20 +19,20 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+@ExtendWith(MockitoExtension.class)
 class BrasilApiServiceTest {
+
     @Mock
     private BrasilApiClient client;
 
     @Mock
     private RedisClient cache;
 
-    private BrasilApiService service;
+    @Mock
+    private AuditService auditService;
 
-    @BeforeEach
-    void setUp() {
-        MockitoAnnotations.openMocks(this);
-        service = new BrasilApiService(client, cache);
-    }
+    @InjectMocks
+    private BrasilApiService service;
 
     @Test
     void findAddressByCep_returnsFromCache_whenPresent() {

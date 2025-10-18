@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import template_spring_boot.template.adapters.client.BrasilApiClient;
 import template_spring_boot.template.adapters.client.RedisClient;
 import template_spring_boot.template.adapters.client.dto.AddressResponse;
+import template_spring_boot.template.application.service.gateway.AuditService;
 import template_spring_boot.template.application.validation.CepValidator;
 import template_spring_boot.template.domain.Address;
 
@@ -18,10 +19,12 @@ public class BrasilApiService {
     private static final Duration CACHE_TTL = Duration.ofSeconds(60);
     private final BrasilApiClient brasilApiClient;
     private final RedisClient redisClient;
+    private final AuditService auditService;
 
-    public BrasilApiService(final BrasilApiClient brasilApiClient, final RedisClient redisClient) {
+    public BrasilApiService(final BrasilApiClient brasilApiClient, final RedisClient redisClient, final AuditService auditService) {
         this.brasilApiClient = brasilApiClient;
         this.redisClient = redisClient;
+        this.auditService = auditService;
     }
 
     public Address findAddressByCep(final String cep) {
@@ -34,6 +37,11 @@ public class BrasilApiService {
 
         if (addressFromCache.isPresent()) {
             logger.info("Cache hit for cep {}", normalized);
+            try {
+                auditService.auditCep(normalized, "cache://redis", "CACHE_HIT", "served from cache");
+            } catch (Exception ex) {
+                logger.error("Audit failed for cache hit {}: {}", normalized, ex.getMessage());
+            }
             return addressFromCache.get();
         }
 

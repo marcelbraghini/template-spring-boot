@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -21,6 +22,7 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class RedisClientTest {
+
     @Mock
     private StringRedisTemplate redis;
 
@@ -30,12 +32,12 @@ class RedisClientTest {
     @Mock
     private ObjectMapper mapper;
 
+    @InjectMocks
     private RedisClient cache;
 
     @BeforeEach
     void setUp() {
         when(redis.opsForValue()).thenReturn(ops);
-        cache = new RedisClient(redis, mapper);
     }
 
     @Test

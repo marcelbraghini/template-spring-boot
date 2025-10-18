@@ -10,7 +10,22 @@ services:
     volumes:
       - redis-data:/data
 
+  postgres:
+    image: postgres:15-alpine
+    container_name: template-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: template_db
+      POSTGRES_USER: template_user
+      POSTGRES_PASSWORD: template_pass
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+
 volumes:
   redis-data:
+    driver: local
+  pg-data:
     driver: local
 
