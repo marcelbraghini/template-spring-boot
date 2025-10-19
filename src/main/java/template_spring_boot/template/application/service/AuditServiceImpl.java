@@ -3,6 +3,8 @@ package template_spring_boot.template.application.service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 import template_spring_boot.template.adapters.database.postgresql.entities.CepAudit;
 import template_spring_boot.template.adapters.database.postgresql.repositories.CepAuditRepository;
 import template_spring_boot.template.application.service.gateway.AuditService;
@@ -20,6 +22,7 @@ public class AuditServiceImpl implements AuditService {
     }
 
     @Override
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void auditCep(final String cep, final String requestUrl, final String status, final String message) {
         try {
             final CepAudit audit = new CepAudit(cep, requestUrl, status, message, Instant.now());
@@ -30,4 +33,3 @@ public class AuditServiceImpl implements AuditService {
         }
     }
 }
-
